@@ -4,7 +4,7 @@ Command line utility that lets you programaticaly access a github vault (a priva
 
 The passwords are encrypted before storage, using rsa key pairs.
 
-This is very much a work in progress and a nice way to learn different encryption systems with Rust
+This is very much a work in progress and a nice way to learn different encryption systems (and other concepts) with Rust
 
 **How to use it**
 

@@ -1,4 +1,4 @@
-***RUSYVAULT***
+***RUSTYVAULT***
 
 Command line utility that lets you programaticaly access a github vault (a private repo) where all your passwords are stored.
 

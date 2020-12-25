@@ -1,7 +1,7 @@
 // make a post or put request to add a new value to the file
 use super::getters::get_data;
 use crate::crypto::helpers::encrypt;
-use crate::crypto::helpers::get_api_key_value;
+use crate::crypto::helpers::get_file_value;
 use crate::crypto::helpers::split_data;
 use base64::encode;
 use reqwest;
@@ -13,21 +13,23 @@ pub async fn add_to_file(
     first: bool,
     id: &str,
     password: &str,
+    repo_path: String
 ) -> Result<(), std::io::Error> {
-    let api_key = get_api_key_value();
+    let api_key = get_file_value("github");
     let mut sha = "".to_string();
     let mut filename = "default".to_string();
     let mut json_file: Value = serde_json::from_str("{}").unwrap();
 
     if !first {
-        let (decoded, s, f) = get_data().await.unwrap();
+        let (decoded, s, f) = get_data(repo_path.clone()).await.unwrap();
         sha = s;
         filename = f;
         json_file = serde_json::from_str(decoded.trim_matches(char::from(0))).unwrap();
     }
 
     let url = format!(
-        "https://api.github.com/repos/andcri/vault/contents/{}",
+        "https://api.github.com/repos/{}/contents/{}",
+        repo_path,
         filename
     );
     // convert the string into a json object

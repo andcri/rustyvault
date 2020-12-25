@@ -44,13 +44,13 @@ pub fn extract_string_from_json(value: &Value) -> String {
     extracted_string
 }
 
-pub fn get_api_key_value() -> String {
+pub fn get_file_value(filename: &str) -> String {
     let path = if let Some(home_path) = home_dir() {
         String::from(format!("{}/.rustyvault/", home_path.to_string_lossy()))
     } else {
         String::from("/.rustyvault/")
     };
-    let contents = fs::read_to_string(format!("{}github", path))
+    let contents = fs::read_to_string(format!("{}{}", path, filename))
         .expect("Something went wrong reading the file");
 
     contents.replace("\n", "")

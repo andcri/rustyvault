@@ -7,7 +7,7 @@ use std::io::Write;
 use std::path::Path;
 
 pub async fn init_data() -> Result<(), std::io::Error> {
-    let (path, passphrase, github) = get_init_data()?;
+    let (path, passphrase, github, repo_path) = get_init_data()?;
     // create folder if doesnt exists
     if !Path::new(path.trim()).exists() {
         std::fs::create_dir(path.trim())?;
@@ -22,15 +22,17 @@ pub async fn init_data() -> Result<(), std::io::Error> {
     let mut private_key_file = File::create(format!("{}rustykey", path))?;
     let mut public_key_file = File::create(format!("{}rustykey.pem", path))?;
     let mut github_api = File::create(format!("{}github", path))?;
+    let mut github_repo = File::create(format!("{}github_repo", path))?;
 
     private_key_file.write_all(private_key_save.as_bytes())?;
     public_key_file.write_all(public_key_save.as_bytes())?;
     github_api.write_all(github.as_bytes())?;
+    github_repo.write_all(repo_path.as_bytes())?;
 
-    Ok(add_to_file(true, "default", "welcome").await?)
+    Ok(add_to_file(true, "default", "welcome", repo_path).await?)
 }
 
-fn get_init_data() -> Result<(String, String, String), std::io::Error> {
+fn get_init_data() -> Result<(String, String, String, String), std::io::Error> {
     let path = if let Some(home_path) = home_dir() {
         String::from(format!("{}/.rustyvault/", home_path.to_string_lossy()))
     } else {
@@ -49,6 +51,15 @@ fn get_init_data() -> Result<(String, String, String), std::io::Error> {
             panic!("exited")
         }
     }
+    print!("Insert your github username: ");
+    std::io::stdout().flush().unwrap();
+    let mut github_user = String::new();
+    std::io::stdin().read_line(&mut github_user).unwrap();
+    print!("Insert your github Vault repo name: ");
+    std::io::stdout().flush().unwrap();
+    let mut github_repo = String::new();
+    std::io::stdin().read_line(&mut github_repo).unwrap();
+    let repo_path= format!("{}/{}", github_user, github_repo);
     let pass = rpassword::prompt_password_stdout(
         "Enter a password for the keys (leave blank for no password): ",
     )
@@ -63,7 +74,7 @@ fn get_init_data() -> Result<(String, String, String), std::io::Error> {
     if pass == pass_confirm && github_api_key == github_api_key_confirm {
         println!("Creating the key pair in the folder ~/.rustyvautl");
         println!("Creating the file github with your api key in the folder ~/.rustyvautl");
-        return Ok((path, pass, github_api_key));
+        return Ok((path, pass, github_api_key, repo_path));
     }
     panic!("There was an error")
 }

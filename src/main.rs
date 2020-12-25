@@ -6,6 +6,7 @@ extern crate tokio;
 
 use clap::{App, Arg, SubCommand};
 use crypto::init::init_data;
+use crypto::helpers::get_file_value;
 use operations::adders::add_to_file;
 use operations::getters::get_password;
 use diceware_gen::DicewareGen;
@@ -51,20 +52,24 @@ async fn main() -> Result<(), std::io::Error> {
         .get_matches();
 
     // TODO check when everything other than init is called the proper data is initialized, if that is not the case display to the user
+    // get repo name and pass it everywere
+    // read from repo
 
     match matches.subcommand() {
         ("init", _init) => init_data().await,
         ("get", get) => match get {
             Some(value) => {
+                let repo_path = get_file_value("github_repo");
                 if value.is_present("show") {
-                    return Ok(get_password(value.value_of("password_name").unwrap(), true).await?);
+                    return Ok(get_password(value.value_of("password_name").unwrap(), true, repo_path).await?);
                 }
-                Ok(get_password(value.value_of("password_name").unwrap(), false).await?)
+                Ok(get_password(value.value_of("password_name").unwrap(), false, repo_path).await?)
             }
             _ => Ok(()),
         },
         ("new", new) => match new {
             Some(value) => {
+                let repo_path = get_file_value("github_repo");
                 if value.is_present("auto") {
                     println!("A safe password is now being generated for you :)");
                     let dice = DicewareGen::new().unwrap();
@@ -76,8 +81,7 @@ async fn main() -> Result<(), std::io::Error> {
                     return Ok(add_to_file(
                         false,
                         value.value_of("password_name").unwrap(),
-                        pass.trim(),
-                    )
+                        pass.trim(), repo_path)
                     .await?);
                 }
                 let pass = rpassword::prompt_password_stdout("Enter new password: ").unwrap();
@@ -89,6 +93,7 @@ async fn main() -> Result<(), std::io::Error> {
                         false,
                         value.value_of("password_name").unwrap(),
                         pass.trim(),
+                        repo_path
                     )
                     .await?)
                 } else {

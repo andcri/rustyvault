@@ -4,17 +4,18 @@ extern crate reqwest;
 
 use crate::crypto::helpers::decrypt;
 use crate::crypto::helpers::extract_string_from_json;
-use crate::crypto::helpers::get_api_key_value;
+use crate::crypto::helpers::get_file_value;
 use base64::decode;
 use copypasta_ext::prelude::*;
 use copypasta_ext::x11_fork::ClipboardContext;
 use serde_json::value::Value;
 
-pub async fn get_data() -> Result<(String, String, String), std::io::Error> {
-    let api_key = get_api_key_value();
+pub async fn get_data(repo_path: String) -> Result<(String, String, String), std::io::Error> {
+    let api_key = get_file_value("github");
     let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/contents/default", repo_path);
     let body = client
-        .get("https://api.github.com/repos/andcri/vault/contents/default")
+        .get(url.trim())
         .header("Authorization", format!("token {}", api_key))
         .header("Accept", "application/vnd.github.v3+json")
         .header("User-Agent", "request")
@@ -48,8 +49,8 @@ pub async fn get_data() -> Result<(String, String, String), std::io::Error> {
     Ok((final_str, sha, file_name))
 }
 
-pub async fn get_password(args: &str, show: bool) -> Result<(), std::io::Error> {
-    let (decrypted, _, _) = get_data().await.unwrap();
+pub async fn get_password(args: &str, show: bool, repo_path: String) -> Result<(), std::io::Error> {
+    let (decrypted, _, _) = get_data(repo_path).await.unwrap();
     let cleaned_decrypted = decrypted.trim_matches(char::from(0));
     let content: serde_json::Value =
         serde_json::from_str(cleaned_decrypted).expect("JSON was not well formatted");

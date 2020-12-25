@@ -6,7 +6,12 @@ use serde_json::value::Value;
 use std::fs;
 
 pub fn encrypt(data: &str) -> Result<Vec<u8>, std::io::Error> {
-    let public = fs::read_to_string("/home/andrea/.rustyvault/rustykey.pem")?;
+    let path = if let Some(home_path) = home_dir() {
+        String::from(format!("{}/.rustyvault/", home_path.to_string_lossy()))
+    } else {
+        String::from("/.rustyvault/")
+    };
+    let public = fs::read_to_string(format!("{}", path))?;
 
     // Encrypt with public key
     let rsa = Rsa::public_key_from_pem(public.as_bytes()).unwrap();
@@ -18,7 +23,12 @@ pub fn encrypt(data: &str) -> Result<Vec<u8>, std::io::Error> {
 }
 
 pub fn decrypt(buffer: Vec<u8>) -> Result<String, std::io::Error> {
-    let private = fs::read_to_string("/home/andrea/.rustyvault/rustykey")?;
+    let path = if let Some(home_path) = home_dir() {
+        String::from(format!("{}/.rustyvault/", home_path.to_string_lossy()))
+    } else {
+        String::from("/.rustyvault/")
+    };
+    let private = fs::read_to_string(format!("{}", path))?;
     let passphrase = "";
     let data = buffer;
 

@@ -61,8 +61,8 @@ fn get_init_data() -> Result<(String, String, String), std::io::Error> {
     let github_api_key_confirm =
         rpassword::prompt_password_stdout("Enter again your github api key: ").unwrap();
     if pass == pass_confirm && github_api_key == github_api_key_confirm {
-        println!("Creating the key pair in the folder ~/.rustyvautl");
-        println!("Creating the file github with your api key in the folder ~/.rustyvautl");
+        println!("Creating the key pair in the folder ~/.rustyvault");
+        println!("Creating the file github with your api key in the folder ~/.rustyvault");
         return Ok((path, pass, github_api_key));
     }
     panic!("There was an error")

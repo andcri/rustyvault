@@ -12,10 +12,11 @@ use std::path::Path;
 struct Config {
     username: String,
     repository: String,
+    password_protected: bool,
 }
 
 pub async fn init_data() -> Result<(), std::io::Error> {
-    let (path, passphrase, github, username, repository) = get_init_data()?;
+    let (path, passphrase, github, username, repository, password_protected) = get_init_data()?;
     // create folder if doesnt exists
     if !Path::new(path.trim()).exists() {
         std::fs::create_dir(path.trim())?;
@@ -36,8 +37,9 @@ pub async fn init_data() -> Result<(), std::io::Error> {
     public_key_file.write_all(public_key_save.as_bytes())?;
     github_api.write_all(github.as_bytes())?;
     let config = Config {
-        username: username,
-        repository: repository,
+        username,
+        repository,
+        password_protected,
     };
     let config_json = serde_json::to_string(&config)?;
     user_config.write_all(config_json.as_bytes())?;
@@ -45,7 +47,7 @@ pub async fn init_data() -> Result<(), std::io::Error> {
     Ok(add_to_file(true, "default", "welcome").await?)
 }
 
-fn get_init_data() -> Result<(String, String, String, String, String), std::io::Error> {
+fn get_init_data() -> Result<(String, String, String, String, String, bool), std::io::Error> {
     let path = if let Some(home_path) = home_dir() {
         String::from(format!("{}/.rustyvault/", home_path.to_string_lossy()))
     } else {
@@ -74,17 +76,24 @@ fn get_init_data() -> Result<(String, String, String, String, String), std::io::
     .unwrap();
     let github_api_key = rpassword::prompt_password_stdout("Enter your github api key: ").unwrap();
     let github_api_key_confirm =
-    rpassword::prompt_password_stdout("Enter again your github api key: ").unwrap();
-    let username = rpassword::prompt_password_stdout(
-        "Enter your GitHub username: "
-    ).unwrap();
+        rpassword::prompt_password_stdout("Enter again your github api key: ").unwrap();
+    let username = rpassword::prompt_password_stdout("Enter your GitHub username: ").unwrap();
     let repository = rpassword::prompt_password_stdout(
-        "Enter the repository name you want to use as your vault: "
-    ).unwrap();
+        "Enter the repository name you want to use as your vault: ",
+    )
+    .unwrap();
     if pass == pass_confirm && github_api_key == github_api_key_confirm {
         println!("Creating the key pair in the folder ~/.rustyvault");
         println!("Creating the file github with your api key in the folder ~/.rustyvault");
-        return Ok((path, pass, github_api_key, username, repository));
+        let password_protected = if pass.len() != 0 { true } else { false };
+        return Ok((
+            path,
+            pass,
+            github_api_key,
+            username,
+            repository,
+            password_protected,
+        ));
     }
     panic!("There was an error")
 }

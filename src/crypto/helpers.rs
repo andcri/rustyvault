@@ -23,17 +23,14 @@ pub fn encrypt(data: &str) -> Result<Vec<u8>, std::io::Error> {
     Ok(buf)
 }
 
-pub fn decrypt(buffer: Vec<u8>) -> Result<String, std::io::Error> {
+pub fn decrypt(buffer: Vec<u8>, passphrase: String) -> Result<String, std::io::Error> {
     let path = if let Some(home_path) = home_dir() {
         String::from(format!("{}/.rustyvault/", home_path.to_string_lossy()))
     } else {
         String::from("/.rustyvault/")
     };
     let private = fs::read_to_string(format!("{}rustykey", path))?;
-    let passphrase = "";
     let data = buffer;
-
-    // // Decrypt with private key
     let rsa =
         Rsa::private_key_from_pem_passphrase(private.as_bytes(), passphrase.as_bytes()).unwrap();
     let mut buf: Vec<u8> = vec![0; rsa.size() as usize];
@@ -41,7 +38,6 @@ pub fn decrypt(buffer: Vec<u8>) -> Result<String, std::io::Error> {
         .private_decrypt(&data, &mut buf, Padding::PKCS1)
         .unwrap();
     let decrypted = String::from_utf8(buf).unwrap();
-    // println!("Decrypted: {:?}", decrypted.len());
 
     Ok(decrypted)
 }
@@ -83,26 +79,15 @@ pub fn split_data<'a>(data: String) -> Vec<String> {
     chunks
 }
 
-pub fn get_username() -> String {
+pub fn get_config(name: &str) -> String {
     let path = if let Some(home_path) = home_dir() {
         String::from(format!("{}/.rustyvault/", home_path.to_string_lossy()))
     } else {
         String::from("/.rustyvault/")
     };
     let file = File::open(format!("{}config.json", path)).unwrap();
-    let json: serde_json::Value = serde_json::from_reader(file).expect("file should be proper JSON");
-    let username = json.get("username").expect("file should have username key");
+    let json: serde_json::Value =
+        serde_json::from_reader(file).expect("file should be proper JSON");
+    let username = json.get(name).expect("file should have username key");
     return username.to_string();
-}
-
-pub fn get_repository() -> String {
-    let path = if let Some(home_path) = home_dir() {
-        String::from(format!("{}/.rustyvault/", home_path.to_string_lossy()))
-    } else {
-        String::from("/.rustyvault/")
-    };
-    let file = File::open(format!("{}config.json", path)).unwrap();
-    let json: serde_json::Value = serde_json::from_reader(file).expect("file should be proper JSON");
-    let repository = json.get("repository").expect("file should have repository key");
-    return repository.to_string();
 }

@@ -6,6 +6,7 @@ extern crate tokio;
 
 use clap::{App, Arg, SubCommand};
 use crypto::init::init_data;
+use diceware_gen::DicewareGen;
 use operations::adders::add_to_file;
 use operations::getters::get_password;
 
@@ -25,7 +26,14 @@ async fn main() -> Result<(), std::io::Error> {
         .subcommand(
             SubCommand::with_name("new")
                 .about("add a new password to your rusty vault")
-                .arg(Arg::with_name("password_name").required(true)),
+                .arg(Arg::with_name("password_name").required(true))
+                .arg(
+                    Arg::with_name("auto")
+                        .required(false)
+                        .short("a")
+                        .long("auto")
+                        .help("automatically generate a passphrase using diceware"),
+                ),
         )
         .subcommand(
             SubCommand::with_name("update").arg(Arg::with_name("password_name").required(true)),
@@ -59,17 +67,30 @@ async fn main() -> Result<(), std::io::Error> {
         },
         ("new", new) => match new {
             Some(value) => {
+                if value.is_present("auto") {
+                    println!("A safe password is now being generated for you :)");
+                    let dice = DicewareGen::new().unwrap();
+                    let rounds: u8 = 6;
+                    let mut pass = String::new();
+                    for word in dice.gen(rounds) {
+                        pass += &word;
+                    }
+                    return Ok(add_to_file(
+                        false,
+                        value.value_of("password_name").unwrap(),
+                        pass.trim(),
+                    )
+                    .await?);
+                }
                 let pass = rpassword::prompt_password_stdout("Enter new password: ").unwrap();
                 let pass_confirm =
                     rpassword::prompt_password_stdout("Confirm new password: ").unwrap();
                 if pass == pass_confirm {
                     println!("Adding your password to your rusty vault...");
-                    Ok(add_to_file(
-                        false,
-                        value.value_of("password_name").unwrap(),
-                        pass.trim(),
+                    Ok(
+                        add_to_file(false, value.value_of("password_name").unwrap(), pass.trim())
+                            .await?,
                     )
-                    .await?)
                 } else {
                     println!("the passwords that you entered were not matching.");
                     Ok(())

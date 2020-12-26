@@ -1,7 +1,6 @@
 // make a post or put request to add a new value to the file
 use super::getters::get_data;
 use crate::crypto::helpers::encrypt;
-use crate::crypto::helpers::get_api_key_value;
 use crate::crypto::helpers::get_config;
 use crate::crypto::helpers::split_data;
 use base64::encode;
@@ -11,7 +10,7 @@ use serde_json::value::Value;
 use std::collections::HashMap;
 
 pub async fn add_to_file(first: bool, id: &str, password: &str) -> Result<(), std::io::Error> {
-    let api_key = get_api_key_value();
+    let api_token = get_config("github_api_token");
     let username = get_config("username");
     let repository = get_config("repository");
     let mut sha = "".to_string();
@@ -44,14 +43,14 @@ pub async fn add_to_file(first: bool, id: &str, password: &str) -> Result<(), st
     let new_final = encode(final_data);
 
     let mut json_to_post = HashMap::new();
-    json_to_post.insert("message", "from_rust");
+    json_to_post.insert("message", "Update vault");
     json_to_post.insert("content", new_final.trim());
     json_to_post.insert("sha", sha.trim());
     // make the post request
     let client = reqwest::Client::new();
     client
         .put(url.trim())
-        .header("Authorization", format!("token {}", api_key))
+        .header("Authorization", format!("token {}", api_token.replace('"', "")))
         .header("Accept", "application/vnd.github.v3+json")
         .header("User-Agent", "request")
         .json(&json_to_post)

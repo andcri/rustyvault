@@ -21,7 +21,7 @@ async fn main() -> Result<(), std::io::Error> {
         .author("HippoLord")
         .subcommand(
             SubCommand::with_name("init")
-                .about("initialize the rsa key pair in a path of your choosing"),
+                .about("initialize the RSA key pair in a path of your choosing"),
         )
         .subcommand(
             SubCommand::with_name("new")
@@ -67,34 +67,35 @@ async fn main() -> Result<(), std::io::Error> {
         },
         ("new", new) => match new {
             Some(value) => {
+                let mut pass = String::new();
+
                 if value.is_present("auto") {
                     println!("A safe password is now being generated for you :)");
                     let dice = DicewareGen::new().unwrap();
                     let rounds: u8 = 6;
-                    let mut pass = String::new();
                     for word in dice.gen(rounds) {
                         pass += &word;
                     }
-                    return Ok(add_to_file(
+                } else {
+                    pass = rpassword::prompt_password_stdout("Enter new password: ").unwrap();
+                    let pass_confirm =
+                        rpassword::prompt_password_stdout("Confirm new password: ").unwrap();
+                    if pass == pass_confirm {
+                        println!("Adding your password to your rusty vault...");
+                    } else {
+                        println!("The passwords that you entered did not match.");
+                        return Ok(())
+                    }
+                }
+                
+                Ok(
+                    add_to_file(
                         false,
                         value.value_of("password_name").unwrap(),
-                        pass.trim(),
+                        pass.trim()
                     )
-                    .await?);
-                }
-                let pass = rpassword::prompt_password_stdout("Enter new password: ").unwrap();
-                let pass_confirm =
-                    rpassword::prompt_password_stdout("Confirm new password: ").unwrap();
-                if pass == pass_confirm {
-                    println!("Adding your password to your rusty vault...");
-                    Ok(
-                        add_to_file(false, value.value_of("password_name").unwrap(), pass.trim())
-                            .await?,
-                    )
-                } else {
-                    println!("the passwords that you entered were not matching.");
-                    Ok(())
-                }
+                    .await?,
+                )
             }
             _ => Ok(()),
         },

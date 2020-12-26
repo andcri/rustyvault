@@ -4,7 +4,6 @@ extern crate reqwest;
 
 use crate::crypto::helpers::decrypt;
 use crate::crypto::helpers::extract_string_from_json;
-use crate::crypto::helpers::get_api_key_value;
 use crate::crypto::helpers::get_config;
 use base64::decode;
 use copypasta_ext::prelude::*;
@@ -12,7 +11,7 @@ use copypasta_ext::x11_fork::ClipboardContext;
 use serde_json::value::Value;
 
 pub async fn get_data() -> Result<(String, String, String), std::io::Error> {
-    let api_key = get_api_key_value();
+    let api_key = get_config("github_api_token");
     let username = get_config("username");
     let repository = get_config("repository");
     let client = reqwest::Client::new();
@@ -23,7 +22,7 @@ pub async fn get_data() -> Result<(String, String, String), std::io::Error> {
     );
     let body = client
         .get(&endpoint)
-        .header("Authorization", format!("token {}", api_key))
+        .header("Authorization", format!("token {}", api_key.replace('"', "")))
         .header("Accept", "application/vnd.github.v3+json")
         .header("User-Agent", "request")
         .send()
@@ -43,9 +42,9 @@ pub async fn get_data() -> Result<(String, String, String), std::io::Error> {
 
     let decoded = String::from_utf8(decode(content.replace("\n", "")).unwrap()).unwrap();
     let parts = decoded.split(",");
-    // get password to pass to the decrypt function
+    // get private key password to pass to the decrypt function
     let rsa_password = if get_config("password_protected") == "true" {
-        rpassword::prompt_password_stdout("Enter your Rsa password: ").unwrap()
+        rpassword::prompt_password_stdout("Enter your RSA password: ").unwrap()
     } else {
         String::from("")
     };

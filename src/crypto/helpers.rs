@@ -51,18 +51,6 @@ pub fn extract_string_from_json(value: &Value) -> String {
     extracted_string
 }
 
-pub fn get_api_key_value() -> String {
-    let path = if let Some(home_path) = home_dir() {
-        String::from(format!("{}/.rustyvault/", home_path.to_string_lossy()))
-    } else {
-        String::from("/.rustyvault/")
-    };
-    let contents = fs::read_to_string(format!("{}github", path))
-        .expect("Something went wrong reading the file");
-
-    contents.replace("\n", "")
-}
-
 pub fn split_data<'a>(data: String) -> Vec<String> {
     // split every 50
     let mut position = 0;

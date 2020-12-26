@@ -5,6 +5,8 @@ extern crate reqwest;
 use crate::crypto::helpers::decrypt;
 use crate::crypto::helpers::extract_string_from_json;
 use crate::crypto::helpers::get_api_key_value;
+use crate::crypto::helpers::get_username;
+use crate::crypto::helpers::get_repository;
 use base64::decode;
 use copypasta_ext::prelude::*;
 use copypasta_ext::x11_fork::ClipboardContext;
@@ -12,9 +14,16 @@ use serde_json::value::Value;
 
 pub async fn get_data() -> Result<(String, String, String), std::io::Error> {
     let api_key = get_api_key_value();
+    let username = get_username();
+    let repository = get_repository();
     let client = reqwest::Client::new();
+    let endpoint = format!(
+        "https://api.github.com/repos/{}/{}/contents/default",
+        username.replace('"', ""),
+        repository.replace('"', "")
+    );
     let body = client
-        .get("https://api.github.com/repos/andcri/vault/contents/default")
+        .get(&endpoint)
         .header("Authorization", format!("token {}", api_key))
         .header("Accept", "application/vnd.github.v3+json")
         .header("User-Agent", "request")
@@ -68,7 +77,7 @@ pub async fn get_password(args: &str, show: bool) -> Result<(), std::io::Error> 
         println!("Your password for {} is {}", args.to_string(), value);
     }
     println!(
-        "Your password for {} is now copyed on your clipboard",
+        "Your password for {} is now copied on your clipboard",
         args.to_string()
     );
     Ok(())

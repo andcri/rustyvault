@@ -88,6 +88,6 @@ pub fn get_config(name: &str) -> String {
     let file = File::open(format!("{}config.json", path)).unwrap();
     let json: serde_json::Value =
         serde_json::from_reader(file).expect("file should be proper JSON");
-    let username = json.get(name).expect("file should have username key");
-    return username.to_string();
+    let key = json.get(name).expect(&format!("file should have {} key", name));
+    return key.to_string();
 }

@@ -6,9 +6,9 @@ extern crate tokio;
 
 use clap::{App, Arg, SubCommand};
 use crypto::init::init_data;
+use diceware_gen::DicewareGen;
 use operations::adders::add_to_file;
 use operations::getters::get_password;
-use diceware_gen::DicewareGen;
 
 mod crypto;
 mod operations;
@@ -27,11 +27,13 @@ async fn main() -> Result<(), std::io::Error> {
             SubCommand::with_name("new")
                 .about("add a new password to your rusty vault")
                 .arg(Arg::with_name("password_name").required(true))
-                .arg(Arg::with_name("auto")
-                .required(false)
-                .short("a")
-                .long("auto")
-                .help("automatically generate a passphrase using diceware")),
+                .arg(
+                    Arg::with_name("auto")
+                        .required(false)
+                        .short("a")
+                        .long("auto")
+                        .help("automatically generate a passphrase using diceware"),
+                ),
         )
         .subcommand(
             SubCommand::with_name("update").arg(Arg::with_name("password_name").required(true)),
@@ -85,12 +87,10 @@ async fn main() -> Result<(), std::io::Error> {
                     rpassword::prompt_password_stdout("Confirm new password: ").unwrap();
                 if pass == pass_confirm {
                     println!("Adding your password to your rusty vault...");
-                    Ok(add_to_file(
-                        false,
-                        value.value_of("password_name").unwrap(),
-                        pass.trim(),
+                    Ok(
+                        add_to_file(false, value.value_of("password_name").unwrap(), pass.trim())
+                            .await?,
                     )
-                    .await?)
                 } else {
                     println!("the passwords that you entered were not matching.");
                     Ok(())

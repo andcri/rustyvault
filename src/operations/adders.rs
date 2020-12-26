@@ -2,8 +2,7 @@
 use super::getters::get_data;
 use crate::crypto::helpers::encrypt;
 use crate::crypto::helpers::get_api_key_value;
-use crate::crypto::helpers::get_username;
-use crate::crypto::helpers::get_repository;
+use crate::crypto::helpers::get_config;
 use crate::crypto::helpers::split_data;
 use base64::encode;
 use reqwest;
@@ -11,14 +10,10 @@ use serde_json;
 use serde_json::value::Value;
 use std::collections::HashMap;
 
-pub async fn add_to_file(
-    first: bool,
-    id: &str,
-    password: &str,
-) -> Result<(), std::io::Error> {
+pub async fn add_to_file(first: bool, id: &str, password: &str) -> Result<(), std::io::Error> {
     let api_key = get_api_key_value();
-    let username = get_username();
-    let repository = get_repository();
+    let username = get_config("username");
+    let repository = get_config("repository");
     let mut sha = "".to_string();
     let mut filename = "default".to_string();
     let mut json_file: Value = serde_json::from_str("{}").unwrap();
@@ -70,4 +65,3 @@ pub async fn add_to_file(
     println!("Done!");
     Ok(())
 }
-

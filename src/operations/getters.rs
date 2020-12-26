@@ -5,8 +5,7 @@ extern crate reqwest;
 use crate::crypto::helpers::decrypt;
 use crate::crypto::helpers::extract_string_from_json;
 use crate::crypto::helpers::get_api_key_value;
-use crate::crypto::helpers::get_username;
-use crate::crypto::helpers::get_repository;
+use crate::crypto::helpers::get_config;
 use base64::decode;
 use copypasta_ext::prelude::*;
 use copypasta_ext::x11_fork::ClipboardContext;
@@ -14,8 +13,8 @@ use serde_json::value::Value;
 
 pub async fn get_data() -> Result<(String, String, String), std::io::Error> {
     let api_key = get_api_key_value();
-    let username = get_username();
-    let repository = get_repository();
+    let username = get_config("username");
+    let repository = get_config("repository");
     let client = reqwest::Client::new();
     let endpoint = format!(
         "https://api.github.com/repos/{}/{}/contents/default",
@@ -44,9 +43,15 @@ pub async fn get_data() -> Result<(String, String, String), std::io::Error> {
 
     let decoded = String::from_utf8(decode(content.replace("\n", "")).unwrap()).unwrap();
     let parts = decoded.split(",");
+    // get password to pass to the decrypt function
+    let rsa_password = if get_config("password_protected") == "true" {
+        rpassword::prompt_password_stdout("Enter your Rsa password: ").unwrap()
+    } else {
+        String::from("")
+    };
     for part in parts {
         if part != "" {
-            let decrypted = decrypt(decode(part).unwrap())
+            let decrypted = decrypt(decode(part).unwrap(), rsa_password.clone())
                 .unwrap()
                 .trim_matches(char::from(0))
                 .to_string();

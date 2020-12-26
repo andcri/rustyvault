@@ -3,7 +3,7 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fmt::Result as FmtResult;
 pub enum VaultRequestsError {
-    InvalidApiKey,
+    InvalidApiToken,
     InvalidPasswordId,
     InvalidPrivateKey,
     InvalidPublicKey,
@@ -18,10 +18,10 @@ impl Display for VaultRequestsError {
 impl VaultRequestsError {
     fn message(&self) -> &str {
         match self {
-            Self::InvalidApiKey => "Invalid Api key",
+            Self::InvalidApiToken => "Invalid API token",
             Self::InvalidPasswordId => "Invalid PasswordId",
-            Self::InvalidPrivateKey => "Invalid Api key",
-            Self::InvalidPublicKey => "Invalid Api key",
+            Self::InvalidPrivateKey => "Invalid API key",
+            Self::InvalidPublicKey => "Invalid API key",
         }
     }
 }

@@ -53,9 +53,10 @@ $ rustyvault get <identifier>
 
 ### Options
 
-| Option | Description                     |
-| ------ | ------------------------------- |
-| -s     | Print password in your terminal |
+| Option | Use with | Description                     |
+| ------ | -------- | ------------------------------- |
+| -s     | get      | Print password in your terminal |
+| -a     | new      | Auto generate password          |
 
 Enjoy!
 

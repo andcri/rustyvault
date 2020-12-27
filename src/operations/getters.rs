@@ -11,18 +11,18 @@ use copypasta_ext::x11_fork::ClipboardContext;
 use serde_json::value::Value;
 
 pub async fn get_data() -> Result<(String, String, String), std::io::Error> {
-    let api_key = get_config("github_api_token");
+    let github_api_token = get_config("github_api_token");
     let username = get_config("username");
-    let repository = get_config("repository");
+    let repository_name = get_config("repository_name");
     let client = reqwest::Client::new();
     let endpoint = format!(
         "https://api.github.com/repos/{}/{}/contents/default",
         username.replace('"', ""),
-        repository.replace('"', "")
+        repository_name.replace('"', "")
     );
     let body = client
         .get(&endpoint)
-        .header("Authorization", format!("token {}", api_key.replace('"', "")))
+        .header("Authorization", format!("token {}", github_api_token.replace('"', "")))
         .header("Accept", "application/vnd.github.v3+json")
         .header("User-Agent", "request")
         .send()

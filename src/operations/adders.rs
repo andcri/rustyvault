@@ -50,7 +50,10 @@ pub async fn add_to_file(first: bool, id: &str, password: &str) -> Result<(), st
     let client = reqwest::Client::new();
     client
         .put(url.trim())
-        .header("Authorization", format!("token {}", api_token.replace('"', "")))
+        .header(
+            "Authorization",
+            format!("token {}", api_token.replace('"', "")),
+        )
         .header("Accept", "application/vnd.github.v3+json")
         .header("User-Agent", "request")
         .json(&json_to_post)

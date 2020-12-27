@@ -1,4 +1,5 @@
 use crate::add_to_file;
+use crate::crypto::helpers::add_diceware_files;
 use home::home_dir;
 use openssl::rsa::Rsa;
 use openssl::symm::Cipher;
@@ -17,7 +18,8 @@ struct Config {
 }
 
 pub async fn init_data() -> Result<(), std::io::Error> {
-    let (path, rsa_password, username, repository, github_api_token, password_protected) = get_init_data()?;
+    let (path, rsa_password, username, repository, github_api_token, password_protected) =
+        get_init_data()?;
     println!("Creating the key pair in {}", path);
     // create folder if doesnt exists
     if !Path::new(path.trim()).exists() {
@@ -25,8 +27,8 @@ pub async fn init_data() -> Result<(), std::io::Error> {
     }
     let rsa = Rsa::generate(4096).unwrap();
     let private_key: Vec<u8> = rsa
-    .private_key_to_pem_passphrase(Cipher::aes_256_cbc(), rsa_password.as_bytes())
-    .unwrap();
+        .private_key_to_pem_passphrase(Cipher::aes_256_cbc(), rsa_password.as_bytes())
+        .unwrap();
     let public_key: Vec<u8> = rsa.public_key_to_pem().unwrap();
     let private_key_save = String::from_utf8(private_key).unwrap();
     let public_key_save = String::from_utf8(public_key).unwrap();
@@ -45,6 +47,7 @@ pub async fn init_data() -> Result<(), std::io::Error> {
     };
     let config_json = serde_json::to_string(&config)?;
     user_config.write_all(config_json.as_bytes())?;
+    add_diceware_files().await;
 
     Ok(add_to_file(true, "default", "welcome").await?)
 }
@@ -76,7 +79,8 @@ fn get_init_data() -> Result<(String, String, String, String, String, bool), std
         "Enter again the password (leave blank for no password): ",
     )
     .unwrap();
-    let github_api_key = rpassword::prompt_password_stdout("Enter your GitHub API token: ").unwrap();
+    let github_api_key =
+        rpassword::prompt_password_stdout("Enter your GitHub API token: ").unwrap();
     let github_api_key_confirm =
         rpassword::prompt_password_stdout("Enter again your GitHub API token: ").unwrap();
     let username = rpassword::prompt_password_stdout("Enter your GitHub username: ").unwrap();

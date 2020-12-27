@@ -22,7 +22,10 @@ pub async fn get_data() -> Result<(String, String, String), std::io::Error> {
     );
     let body = client
         .get(&endpoint)
-        .header("Authorization", format!("token {}", api_key.replace('"', "")))
+        .header(
+            "Authorization",
+            format!("token {}", api_key.replace('"', "")),
+        )
         .header("Accept", "application/vnd.github.v3+json")
         .header("User-Agent", "request")
         .send()

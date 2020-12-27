@@ -10,9 +10,9 @@ use serde_json::value::Value;
 use std::collections::HashMap;
 
 pub async fn add_to_file(first: bool, id: &str, password: &str) -> Result<(), std::io::Error> {
-    let api_token = get_config("github_api_token");
+    let github_api_token = get_config("github_api_token");
     let username = get_config("username");
-    let repository = get_config("repository");
+    let repository_name = get_config("repository_name");
     let mut sha = "".to_string();
     let mut filename = "default".to_string();
     let mut json_file: Value = serde_json::from_str("{}").unwrap();
@@ -27,7 +27,7 @@ pub async fn add_to_file(first: bool, id: &str, password: &str) -> Result<(), st
     let url = format!(
         "https://api.github.com/repos/{}/{}/contents/{}",
         username.replace('"', ""),
-        repository.replace('"', ""),
+        repository_name.replace('"', ""),
         filename
     );
 
@@ -50,10 +50,7 @@ pub async fn add_to_file(first: bool, id: &str, password: &str) -> Result<(), st
     let client = reqwest::Client::new();
     client
         .put(url.trim())
-        .header(
-            "Authorization",
-            format!("token {}", api_token.replace('"', "")),
-        )
+        .header("Authorization", format!("token {}", github_api_token.replace('"', "")))
         .header("Accept", "application/vnd.github.v3+json")
         .header("User-Agent", "request")
         .json(&json_to_post)

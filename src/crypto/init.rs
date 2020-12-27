@@ -1,4 +1,5 @@
 use crate::add_to_file;
+use crate::crypto::helpers::add_diceware_files;
 use home::home_dir;
 use openssl::rsa::Rsa;
 use openssl::symm::Cipher;
@@ -34,8 +35,8 @@ pub async fn init_data() -> Result<(), std::io::Error> {
     }
     let rsa = Rsa::generate(4096).unwrap();
     let private_key: Vec<u8> = rsa
-    .private_key_to_pem_passphrase(Cipher::aes_256_cbc(), rsa_password.as_bytes())
-    .unwrap();
+        .private_key_to_pem_passphrase(Cipher::aes_256_cbc(), rsa_password.as_bytes())
+        .unwrap();
     let public_key: Vec<u8> = rsa.public_key_to_pem().unwrap();
     let private_key_save = String::from_utf8(private_key).unwrap();
     let public_key_save = String::from_utf8(public_key).unwrap();
@@ -78,7 +79,8 @@ pub async fn init_data() -> Result<(), std::io::Error> {
     };
     let config_json = serde_json::to_string(&config)?;
     user_config.write_all(config_json.as_bytes())?;
-    
+    add_diceware_files().await;
+
     Ok(add_to_file(true, "default", "welcome").await?)
 }
 

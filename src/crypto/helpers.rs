@@ -1,10 +1,13 @@
 // here i put the encrypt and decrypt functions
+extern crate reqwest;
 
 use home::home_dir;
 use openssl::rsa::{Padding, Rsa};
 use serde_json::value::Value;
 use std::fs;
 use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
 
 pub fn encrypt(data: &str) -> Result<Vec<u8>, std::io::Error> {
     let path = if let Some(home_path) = home_dir() {
@@ -76,6 +79,39 @@ pub fn get_config(name: &str) -> String {
     let file = File::open(format!("{}config.json", path)).unwrap();
     let json: serde_json::Value =
         serde_json::from_reader(file).expect("file should be proper JSON");
-    let key = json.get(name).expect(&format!("file should have {} key", name));
+    let key = json
+        .get(name)
+        .expect(&format!("file should have {} key", name));
     return key.to_string();
+}
+
+pub async fn add_diceware_files() -> () {
+    println!("Adding default diceware wordlist");
+    let path = if let Some(home_path) = home_dir() {
+        String::from(format!(
+            "{}/.rustyvault/wordlists",
+            home_path.to_string_lossy()
+        ))
+    } else {
+        String::from("/.rustyvault/wordlists")
+    };
+    if !Path::new(&path).exists() {
+        std::fs::create_dir(&path).unwrap();
+    }
+    // get request and save content in file
+    // https://raw.githubusercontent.com/andcri/rustyvault/main/eff_large_wordlist.txt
+    let client = reqwest::Client::new();
+    let endpoint =
+        "https://raw.githubusercontent.com/andcri/rustyvault/main/eff_large_wordlist.txt";
+    let body = client
+        .get(endpoint)
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+
+    let mut dice_word_list = File::create(format!("{}/eff_large_wordlist.txt", path)).unwrap();
+    dice_word_list.write_all(body.as_bytes()).unwrap();
 }

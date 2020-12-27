@@ -6,11 +6,12 @@ extern crate tokio;
 
 use clap::{App, Arg, SubCommand};
 use crypto::init::init_data;
-use diceware_gen::DicewareGen;
+use generators::diceware::DicewareGen;
 use operations::adders::add_to_file;
 use operations::getters::get_password;
 
 mod crypto;
+mod generators;
 mod operations;
 
 #[tokio::main]
@@ -84,17 +85,13 @@ async fn main() -> Result<(), std::io::Error> {
                         println!("Adding your password to your rusty vault...");
                     } else {
                         println!("The passwords that you entered did not match.");
-                        return Ok(())
+                        return Ok(());
                     }
                 }
-                
+
                 Ok(
-                    add_to_file(
-                        false,
-                        value.value_of("password_name").unwrap(),
-                        pass.trim()
-                    )
-                    .await?,
+                    add_to_file(false, value.value_of("password_name").unwrap(), pass.trim())
+                        .await?,
                 )
             }
             _ => Ok(()),
